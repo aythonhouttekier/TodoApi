@@ -12,7 +12,7 @@ namespace TodoApi.Controllers
     public class TodoController : ControllerBase
     {
         private readonly TodoContext _context;
-
+        
         public TodoController(TodoContext context)
         {
             _context = context;
