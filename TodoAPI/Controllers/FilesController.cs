@@ -9,11 +9,11 @@ namespace TodoApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TodoController : ControllerBase
+    public class FilesController : ControllerBase
     {
-        private readonly TodoContext _context;
+        private readonly FileContext _context;
         
-        public TodoController(TodoContext context)
+        public FilesController(FileContext context)
         {
             _context = context;
 
@@ -21,21 +21,21 @@ namespace TodoApi.Controllers
             {
                 // Create a new TodoItem if collection is empty,
                 // which means you can't delete all TodoItems.
-                _context.TodoItems.Add(new TodoItem { Name = "Item1", IsComplete = true});
+                _context.TodoItems.Add(new FileItem { FileName = "Voorbeeld.pdf", FileUrl = "blob:http://localhost:420fsfsd0/24b174d7-a608-4e69-8c44-c408196473a4" });
                 _context.SaveChanges();
             }
         }
 
         // GET: api/Todo
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TodoItem>>> GetTodoItems()
+        public async Task<ActionResult<IEnumerable<FileItem>>> GetTodoItems()
         {
             return await _context.TodoItems.ToListAsync();
         }
 
         // GET: api/Todo/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<TodoItem>> GetTodoItem(long id)
+        public async Task<ActionResult<FileItem>> GetTodoItem(long id)
         {
             var todoItem = await _context.TodoItems.FindAsync(id);
 
@@ -49,7 +49,7 @@ namespace TodoApi.Controllers
 
         // POST: api/Todo
         [HttpPost]
-        public async Task<ActionResult<TodoItem>> PostTodoItem(TodoItem item)
+        public async Task<ActionResult<FileItem>> PostTodoItem(FileItem item)
         {
             _context.TodoItems.Add(item);
             await _context.SaveChangesAsync();
@@ -59,7 +59,7 @@ namespace TodoApi.Controllers
 
         // PUT: api/Todo/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTodoItem(long id, TodoItem item)
+        public async Task<IActionResult> PutTodoItem(long id, FileItem item)
         {
             if (id != item.Id)
             {

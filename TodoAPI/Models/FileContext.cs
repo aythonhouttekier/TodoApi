@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TodoApi.Models
 {
-    public class TodoContext : DbContext
+    public class FileContext : DbContext
     {
-        public TodoContext(DbContextOptions<TodoContext> options)
+        public FileContext(DbContextOptions<FileContext> options)
             : base(options)
         {
         }
 
-        public DbSet<TodoItem> TodoItems { get; set; }
+        public DbSet<FileItem> TodoItems { get; set; }
     }
 }

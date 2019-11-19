@@ -21,7 +21,8 @@ namespace TodoApi
         //container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<TodoContext>(opt =>
+            services.AddCors();
+            services.AddDbContext<FileContext>(opt =>
                 opt.UseInMemoryDatabase("TodoList"));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
@@ -40,7 +41,10 @@ namespace TodoApi
                 // production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
-
+            app.UseCors(options =>
+                options.AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader());
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseHttpsRedirection();
