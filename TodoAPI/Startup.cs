@@ -47,7 +47,7 @@ namespace TodoApi
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy", builder => builder
-                .WithOrigins("http://localhost:4200")
+                .WithOrigins("http://localhost:4200", "https://blockfrontend.herokuapp.com")
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials());
@@ -59,6 +59,8 @@ namespace TodoApi
                 opt.UseInMemoryDatabase("TodoList"));
             services.AddDbContext<UserContext>(opt =>
                 opt.UseInMemoryDatabase("UserList"));
+            services.AddDbContext<ResultContext>(opt =>
+                opt.UseInMemoryDatabase("ResultList"));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 

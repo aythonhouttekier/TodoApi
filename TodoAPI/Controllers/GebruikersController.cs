@@ -31,8 +31,6 @@ namespace TodoApi.Controllers
             _context = context;
             if (_context.UserItems.Count() == 0)
             {
-                // Create a new TodoItem if collection is empty,
-                // which means you can't delete all TodoItems.
                 _context.UserItems.Add(new User
                 {
                     Username = "admin",
@@ -68,6 +66,56 @@ namespace TodoApi.Controllers
                     Username = "Student1",
                     Firstname = "Student1",
                     Lastname = "Student1",
+                    Password = "azerty",
+                    Access = false,
+                    School = "Elektronica-ICT",
+                    Role = "Student"
+                });
+                _context.UserItems.Add(new User
+                {
+                    Username = "Student3",
+                    Firstname = "Student3",
+                    Lastname = "Student3",
+                    Password = "azerty",
+                    Access = false,
+                    School = "Elektronica-ICT",
+                    Role = "Student"
+                });
+                _context.UserItems.Add(new User
+                {
+                    Username = "Student4",
+                    Firstname = "Student4",
+                    Lastname = "Student4",
+                    Password = "azerty",
+                    Access = false,
+                    School = "Elektronica-ICT",
+                    Role = "Student"
+                });
+                _context.UserItems.Add(new User
+                {
+                    Username = "Student5",
+                    Firstname = "Student5",
+                    Lastname = "Student5",
+                    Password = "azerty",
+                    Access = false,
+                    School = "Elektronica-ICT",
+                    Role = "Student"
+                });
+                _context.UserItems.Add(new User
+                {
+                    Username = "Student6",
+                    Firstname = "Student6",
+                    Lastname = "Student6",
+                    Password = "azerty",
+                    Access = false,
+                    School = "Elektronica-ICT",
+                    Role = "Student"
+                });
+                _context.UserItems.Add(new User
+                {
+                    Username = "Student7",
+                    Firstname = "Student7",
+                    Lastname = "Student7",
                     Password = "azerty",
                     Access = false,
                     School = "Elektronica-ICT",
@@ -144,7 +192,7 @@ namespace TodoApi.Controllers
         }
 
         // POST: api/users
-        [HttpPost, Authorize]
+        [HttpPost]
         public async Task<ActionResult<User>> PostUserItem(User item)
         {
             var users = await _context.UserItems.ToListAsync();
