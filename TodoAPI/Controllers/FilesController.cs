@@ -38,6 +38,27 @@ namespace TodoApi.Controllers
             return alles;
         }
 
+        [HttpGet("bytes/filename/{filename}"), Authorize]
+        public async Task<ActionResult<FileItem>> GetfileTodoItem(string filename)
+        {
+            var alles = await _context.TodoItems.ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
+            {
+                alles[i].FileBytes = null;
+                if (alles[i].FileName == filename)
+                {
+                    var todoItem = alles[i];
+                    if (todoItem == null)
+                    {
+                        return NotFound();
+                    }
+                    return todoItem;
+                }
+            }
+            return NotFound();
+        }
+
         [HttpGet("bytes/{id}"), Authorize]
         public async Task<ActionResult<FileItem>> GetNBTodoItem(long id)
         {
@@ -134,7 +155,44 @@ namespace TodoApi.Controllers
             return NoContent();
         }
 
+        // DELETE: bytes/deleteall
+        [HttpDelete("deleteall"), Authorize]
+        public async Task<IActionResult> DeleteAllResults()
+        {
+            var alles = await _context.TodoItems.ToListAsync();
 
+            for (int i = 0; i < alles.Count; i++)
+            {
+                var todoItem = await _context.TodoItems.FindAsync(alles[i].Id);
+                _context.TodoItems.Remove(todoItem);
+            }
+
+            await _context.SaveChangesAsync();
+            var tout = await _context.TodoItems.ToListAsync();
+
+            await _hub.Clients.All.SendAsync("Files", tout);
+            return NoContent();
+        }
+        [HttpDelete("deleteall/{school}"), Authorize]
+        public async Task<IActionResult> DeleteSchoolResults(string school)
+        {
+            var alles = await _context.TodoItems.ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
+            {
+                if (alles[i].School == school)
+                {
+                    var todoItem = await _context.TodoItems.FindAsync(alles[i].Id);
+                    _context.TodoItems.Remove(todoItem);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            var tout = await _context.TodoItems.ToListAsync();
+
+            await _hub.Clients.All.SendAsync("Files", tout);
+            return NoContent();
+        }
 
 
 
@@ -169,6 +227,14 @@ namespace TodoApi.Controllers
         [HttpPost, Authorize]
         public async Task<ActionResult<FileItem>> PostTodoItem(FileItem item)
         {
+            var results = await _context.TodoItems.ToListAsync();
+            for (int i = 0; i < results.Count; i++)
+            {
+                if (results[i].FileName == item.FileName && results[i].School == item.School)
+                {
+                    return BadRequest();
+                }
+            }
             _context.TodoItems.Add(item);
             await _context.SaveChangesAsync();
 

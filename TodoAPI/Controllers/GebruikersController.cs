@@ -24,13 +24,15 @@ namespace TodoApi.Controllers
     {
         private readonly UserContext _context;
         private IHubContext<EchoHub> _hub;
-
         public GebruikersController(UserContext context, IHubContext<EchoHub> hub)
         {
             _hub = hub;
             _context = context;
+            _context.UserItems.Include(b => b.Examsetting);
             if (_context.UserItems.Count() == 0)
             {
+                // Create a new TodoItem if collection is empty,
+                // which means you can't delete all Items.
                 _context.UserItems.Add(new User
                 {
                     Username = "admin",
@@ -38,8 +40,10 @@ namespace TodoApi.Controllers
                     Lastname = "admin",
                     Password = "azerty",
                     Access = false,
+                    Status = false,
                     School = "",
-                    Role = "Admin"
+                    Role = "Admin",
+                    Examsetting = new List<Setting> { }
                 });
                 _context.UserItems.Add(new User
                 {
@@ -48,8 +52,10 @@ namespace TodoApi.Controllers
                     Lastname = "Leerkracht1",
                     Password = "azerty",
                     Access = false,
+                    Status = false,
                     School = "Elektronica-ICT",
-                    Role = "Leerkracht"
+                    Role = "Leerkracht",
+                    Examsetting = new List<Setting> { }
                 });
                 _context.UserItems.Add(new User
                 {
@@ -58,8 +64,10 @@ namespace TodoApi.Controllers
                     Lastname = "Leerkracht2",
                     Password = "azerty",
                     Access = false,
+                    Status = false,
                     School = "Luchtvaart",
-                    Role = "Leerkracht"
+                    Role = "Leerkracht",
+                    Examsetting = new List<Setting> { }
                 });
                 _context.UserItems.Add(new User
                 {
@@ -68,8 +76,10 @@ namespace TodoApi.Controllers
                     Lastname = "Student1",
                     Password = "azerty",
                     Access = false,
+                    Status = false,
                     School = "Elektronica-ICT",
-                    Role = "Student"
+                    Role = "Student",
+                    Examsetting = new List<Setting> { }
                 });
                 _context.UserItems.Add(new User
                 {
@@ -78,8 +88,11 @@ namespace TodoApi.Controllers
                     Lastname = "Student3",
                     Password = "azerty",
                     Access = false,
+                    Status = false,
                     School = "Elektronica-ICT",
-                    Role = "Student"
+                    Role = "Student",
+                    //Examsetting = new Setting { Spelling = true }
+                    Examsetting = new List<Setting> { }
                 });
                 _context.UserItems.Add(new User
                 {
@@ -88,8 +101,10 @@ namespace TodoApi.Controllers
                     Lastname = "Student4",
                     Password = "azerty",
                     Access = false,
+                    Status = false,
                     School = "Elektronica-ICT",
-                    Role = "Student"
+                    Role = "Student",
+                    Examsetting = new List<Setting> { }
                 });
                 _context.UserItems.Add(new User
                 {
@@ -98,8 +113,10 @@ namespace TodoApi.Controllers
                     Lastname = "Student5",
                     Password = "azerty",
                     Access = false,
+                    Status = false,
                     School = "Elektronica-ICT",
-                    Role = "Student"
+                    Role = "Student",
+                    Examsetting = new List<Setting> { }
                 });
                 _context.UserItems.Add(new User
                 {
@@ -108,8 +125,10 @@ namespace TodoApi.Controllers
                     Lastname = "Student6",
                     Password = "azerty",
                     Access = false,
+                    Status = false,
                     School = "Elektronica-ICT",
-                    Role = "Student"
+                    Role = "Student",
+                    Examsetting = new List<Setting> { }
                 });
                 _context.UserItems.Add(new User
                 {
@@ -118,8 +137,10 @@ namespace TodoApi.Controllers
                     Lastname = "Student7",
                     Password = "azerty",
                     Access = false,
+                    Status = false,
                     School = "Elektronica-ICT",
-                    Role = "Student"
+                    Role = "Student",
+                    Examsetting = new List<Setting> { }
                 });
                 _context.UserItems.Add(new User
                 {
@@ -128,49 +149,49 @@ namespace TodoApi.Controllers
                     Lastname = "Student2",
                     Password = "azerty",
                     Access = false,
+                    Status = false,
                     School = "Luchtvaart",
-                    Role = "Student"
+                    Role = "Student",
+                    Examsetting = new List<Setting> { }
                 });
+
                 _context.SaveChanges();
             }
         }
 
-        //// GET: api/users
-        //[HttpGet, Authorize]
-        //public async Task<ActionResult<IEnumerable<User>>> GetUserItems()
-        //{
-        //    return await _context.UserItems.ToListAsync();
-        //}
         //GET: api/users
-
         [HttpGet, Authorize]
         public async Task<ActionResult<IEnumerable<User>>> GetUserItems()
         {
-            await _hub.Clients.All.SendAsync("Users", _context.UserItems.ToListAsync());
-            return await _context.UserItems.ToListAsync();
+            await _hub.Clients.All.SendAsync("Users", _context.UserItems.Include(b => b.Examsetting).ToListAsync());
+            return await _context.UserItems.Include(b => b.Examsetting).ToListAsync();
         }
 
         // GET: api/users/5
         [HttpGet("{id}"), Authorize]
         public async Task<ActionResult<User>> GetUserItem(long id)
         {
-            var userItem = await _context.UserItems.FindAsync(id);
+            var users = await _context.UserItems.Include(b => b.Examsetting).ToListAsync();
+            //var userItem = await _context.UserItems.FindAsync(id);
 
-            if (userItem == null)
+            for (int i = 0; i < users.Count; i++)
             {
-                return NotFound();
+                if (users[i].Id == id)
+                {
+                    var userItem = users[i];
+                    return userItem;
+                }
             }
-
-            return userItem;
+            return BadRequest();
         }
 
         [HttpPost("authenticate")]
         public async Task<ActionResult<User>> UserLogin(User item)
         {
-            var users = await _context.UserItems.ToListAsync();
+            var users = await _context.UserItems.Include(b => b.Examsetting).ToListAsync();
             for (int i = 0; i < users.Count; i++)
             {
-                if (users[i].Username == item.Username && 
+                if (users[i].Username == item.Username &&
                     users[i].Password == item.Password)
                 {
                     var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("superSecretKey@345"));
@@ -180,7 +201,7 @@ namespace TodoApi.Controllers
                         issuer: "http://localhost:44359",
                         audience: "http://localhost:44359",
                         claims: new List<Claim>(),
-                        expires: DateTime.Now.AddMinutes(50),
+                        expires: DateTime.Now.AddMinutes(120),
                         signingCredentials: signinCredentials
                     );
 
@@ -195,7 +216,7 @@ namespace TodoApi.Controllers
         [HttpPost]
         public async Task<ActionResult<User>> PostUserItem(User item)
         {
-            var users = await _context.UserItems.ToListAsync();
+            var users = await _context.UserItems.Include(b => b.Examsetting).ToListAsync();
             for (int i = 0; i < users.Count; i++)
             {
                 if (users[i].Username == item.Username)
@@ -204,11 +225,18 @@ namespace TodoApi.Controllers
                 }
                 else
                 {
+                    if (item.Examsetting != null)
+                    {
+                        for (int a = 0; a < item.Examsetting.Count; a++)
+                        {
+                            item.Examsetting[a].User_Id = item.Id;
+                        }
+                    }
                     _context.UserItems.Add(item);
                 }
             }
             await _context.SaveChangesAsync();
-            await _hub.Clients.All.SendAsync("Users", _context.UserItems.ToListAsync());
+            await _hub.Clients.All.SendAsync("Users", _context.UserItems.Include(b => b.Examsetting).ToListAsync());
             return CreatedAtAction(nameof(GetUserItem), new { id = item.Id }, item);
         }
 
@@ -216,28 +244,33 @@ namespace TodoApi.Controllers
         [HttpPut("{id}"), Authorize]
         public async Task<IActionResult> PutUserItem(long id, User item)
         {
-            var users = await _context.UserItems.ToListAsync();
+            var users = await _context.UserItems.Include(b => b.Examsetting).ToListAsync();
             var userItem = await _context.UserItems.FindAsync(id);
-
             for (int i = 0; i < users.Count; i++)
             {
                 if (users[i].Username == item.Username && userItem.Username != item.Username)
                 {
                     return BadRequest();
                 }
+                if (users[i].Id == id)
+                {
+                    var putuser = users[i];
+                    putuser.Id = id;
+                    putuser.Firstname = item.Firstname;
+                    putuser.Examsetting = item.Examsetting;
+                    putuser.Status = item.Status;
+                    putuser.Lastname = item.Lastname;
+                    putuser.Username = item.Username;
+                    putuser.Password = item.Password;
+                    putuser.Role = item.Role;
+                    putuser.School = item.School;
+                    putuser.Access = item.Access;
+                    await _context.SaveChangesAsync();
+                    await _hub.Clients.All.SendAsync("Users", _context.UserItems.Include(b => b.Examsetting).ToListAsync());
+                    return Ok(putuser);
+                }
             }
-            userItem.Id = id;
-            userItem.Firstname = item.Firstname;
-            userItem.Lastname = item.Lastname;
-            userItem.Username = item.Username;
-            userItem.Password = item.Password;
-            userItem.Role = item.Role;
-            userItem.School = item.School;
-            userItem.Access = item.Access;
-
-            await _context.SaveChangesAsync();
-            await _hub.Clients.All.SendAsync("Users", _context.UserItems.ToListAsync());
-            return Ok(userItem);
+            return BadRequest();
         }
 
         // DELETE: api/users/5
@@ -253,8 +286,279 @@ namespace TodoApi.Controllers
 
             _context.UserItems.Remove(userItem);
             await _context.SaveChangesAsync();
-            await _hub.Clients.All.SendAsync("Users", _context.UserItems.ToListAsync());
+            await _hub.Clients.All.SendAsync("Users", _context.UserItems.Include(b => b.Examsetting).ToListAsync());
             return NoContent();
+        }
+
+
+        // DELETE: bytes/deleteall
+        [HttpDelete("deleteall"), Authorize]
+        public async Task<IActionResult> DeleteAllResults()
+        {
+            var alles = await _context.UserItems.ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
+            {
+                if (alles[i].Role == "Student")
+                {
+                    var todoItem = await _context.UserItems.FindAsync(alles[i].Id);
+                    _context.UserItems.Remove(todoItem);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            var tout = await _context.UserItems.ToListAsync();
+
+            await _hub.Clients.All.SendAsync("Users", _context.UserItems.Include(b => b.Examsetting).ToListAsync());
+            return NoContent();
+        }
+        [HttpDelete("deleteall/{school}"), Authorize]
+        public async Task<IActionResult> DeleteSchoolResults(string school)
+        {
+            var alles = await _context.UserItems.ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
+            {
+                if (alles[i].School == school && alles[i].Role == "Student")
+                {
+                    var todoItem = await _context.UserItems.FindAsync(alles[i].Id);
+                    _context.UserItems.Remove(todoItem);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            var tout = await _context.UserItems.ToListAsync();
+
+            await _hub.Clients.All.SendAsync("Users", _context.UserItems.Include(b => b.Examsetting).ToListAsync());
+            return NoContent();
+        }
+
+
+
+
+
+
+
+
+
+
+        [HttpPost("setting"), Authorize]
+        public async Task<ActionResult<User>> PostSettingUserItem(Setting item)
+        {
+            var users = await _context.UserItems.Include(b => b.Examsetting).ToListAsync();
+            var userItem = await _context.UserItems.FindAsync(item.User_Id);
+
+            for (int i = 0; i < users.Count; i++)
+            {
+                if (users[i].Id == item.User_Id)
+                {
+                    var putuser = users[i];
+
+                    for (int a = 0; a < putuser.Examsetting.Count; a++)
+                    {
+                        if (putuser.Examsetting[a].Filename == item.Filename)
+                        {
+                            return BadRequest();
+                        }
+                    }
+                    userItem.Status = true;
+                    putuser.Examsetting.Add(new Setting
+                    {
+                        User_Id = users[i].Id,
+                        Filename = item.Filename,
+                        Exam = item.Exam,
+                        Spelling = item.Spelling,
+                        Woord = item.Woord,
+                        Woordenboek = item.Woordenboek,
+                        Vertalen = item.Vertalen,
+                        Drive = item.Drive,
+                        Online = item.Online
+                    });
+                    await _context.SaveChangesAsync();
+                    await _hub.Clients.All.SendAsync("Users", _context.UserItems.Include(b => b.Examsetting).ToListAsync());
+                    return Ok(putuser);
+                }
+            }
+            return BadRequest();
+        }
+
+        [HttpDelete("setting/{userid}/{id}"), Authorize]
+        public async Task<IActionResult> DeleteSettingUserItem(long userid, long id)
+        {
+            var users = await _context.UserItems.Include(b => b.Examsetting).ToListAsync();
+
+            for (int i = 0; i < users.Count; i++)
+            {
+                if (users[i].Id == userid)
+                {
+                    var gebruiker = users[i];
+                    for (int a = 0; a < gebruiker.Examsetting.Count; a++)
+                    {
+                        if (gebruiker.Examsetting[a].Setting_Id == id)
+                        {
+                            var settingtodel = gebruiker.Examsetting[a];
+                            gebruiker.Examsetting.Remove(settingtodel);
+                            await _context.SaveChangesAsync();
+                            await _hub.Clients.All.SendAsync("Users", _context.UserItems.Include(b => b.Examsetting).ToListAsync());
+                            return NoContent();
+                        }
+                    }
+                }
+            }
+            return BadRequest();
+        }
+
+
+
+
+
+        //delete alle settings ook filename = null
+        [HttpDelete("settings/delete/allesetting"), Authorize]
+        public async Task<IActionResult> DeleteAlleeSettingUserItem()
+        {
+            var users = await _context.UserItems.Include(b => b.Examsetting).ToListAsync();
+
+            for (int i = 0; i < users.Count; i++)
+            {
+                var gebruiker = users[i];
+                for (int a = 0; a < gebruiker.Examsetting.Count; a++)
+                {
+                    var settingtodel = gebruiker.Examsetting[a];
+                    gebruiker.Examsetting.Clear();
+                }
+                if (gebruiker.Examsetting.Count == 0)
+                {
+                    gebruiker.Status = false;
+                }
+            }
+            await _context.SaveChangesAsync();
+            await _hub.Clients.All.SendAsync("Users", _context.UserItems.Include(b => b.Examsetting).ToListAsync());
+            return Ok();
+        }
+
+
+
+
+
+
+        //delete alle settings behalve die van alle/overige examens m.a.w filename = null   voor als er op delete alle examens geklikt wordt
+        [HttpDelete("settings/delete/allenotnull/setting"), Authorize]
+        public async Task<IActionResult> DeleteFileAllSettingUserItem()
+        {
+            var users = await _context.UserItems.Include(b => b.Examsetting).ToListAsync();
+
+            for (int i = 0; i < users.Count; i++)
+            {
+                var gebruiker = users[i];
+                foreach (var d in gebruiker.Examsetting.ToArray())
+                {
+                    if (d.Filename != null)
+                    {
+                        gebruiker.Examsetting.Remove(d);
+                    }
+                    if (gebruiker.Examsetting.Count == 0)
+                    {
+                        gebruiker.Status = false;
+                    }
+                }
+            }
+            await _context.SaveChangesAsync();
+            await _hub.Clients.All.SendAsync("Users", _context.UserItems.Include(b => b.Examsetting).ToListAsync());
+            return Ok();
+        }
+        [HttpDelete("setting/delsetting/{school}"), Authorize]
+        public async Task<IActionResult> DeleteFileAllSchoolSettingUserItem(string school)
+        {
+            var alles = await _context.UserItems.Include(b => b.Examsetting).ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
+            {
+                if (alles[i].School == school && alles[i].Role == "Student")
+                {
+                    var gebruiker = alles[i];
+                    foreach (var d in gebruiker.Examsetting.ToArray())
+                    {
+                        if (d.Filename != null)
+                        {
+                            gebruiker.Examsetting.Remove(d);
+                        }
+                        if (gebruiker.Examsetting.Count == 0)
+                        {
+                            gebruiker.Status = false;
+                        }
+                    }
+                }
+            }
+            await _context.SaveChangesAsync();
+            await _hub.Clients.All.SendAsync("Users", _context.UserItems.Include(b => b.Examsetting).ToListAsync());
+            return Ok();
+        }
+
+
+
+
+        [HttpDelete("deleteschoolsetting/{school}"), Authorize]
+        public async Task<IActionResult> DeleteFileAlleSchoolSettingUserItem(string school)
+        {
+            var alles = await _context.UserItems.Include(b => b.Examsetting).ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
+            {
+                if (alles[i].School == school && alles[i].Role == "Student")
+                {
+                    var gebruiker = alles[i];
+                    for (int a = 0; a < gebruiker.Examsetting.Count; a++)
+                    {
+                        var settingtodel = gebruiker.Examsetting[a];
+                        gebruiker.Examsetting.Remove(settingtodel);
+                        gebruiker.Examsetting.Clear();
+                        if (gebruiker.Examsetting.Count == 0)
+                        {
+                            gebruiker.Status = false;
+                        }
+                    }
+                }
+            }
+            await _context.SaveChangesAsync();
+            await _hub.Clients.All.SendAsync("Users", _context.UserItems.Include(b => b.Examsetting).ToListAsync());
+            return Ok();
+        }
+
+
+
+
+
+
+
+
+        //WERKT!!
+        [HttpDelete("setting/skool/{school}/{filename}"), Authorize]
+        public async Task<IActionResult> DeleteFileSettingUserItem(string school, string filename)
+        {
+            var alles = await _context.UserItems.Include(b => b.Examsetting).ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
+            {
+                if (alles[i].School == school && alles[i].Role == "Student")
+                {
+                    var gebruiker = alles[i];
+                    for (int a = 0; a < gebruiker.Examsetting.Count; a++)
+                    {
+                        if (gebruiker.Examsetting[a].Filename == filename)
+                        {
+                            var settingtodel = gebruiker.Examsetting[a];
+                            gebruiker.Examsetting.Remove(settingtodel);
+                            if (gebruiker.Examsetting.Count == 0)
+                            {
+                                gebruiker.Status = false;
+                            }
+                        }
+                    }
+                }
+            }
+            await _context.SaveChangesAsync();
+            await _hub.Clients.All.SendAsync("Users", _context.UserItems.Include(b => b.Examsetting).ToListAsync());
+            return Ok();
         }
     }
 }

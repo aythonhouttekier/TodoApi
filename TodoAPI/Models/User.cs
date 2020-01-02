@@ -15,5 +15,7 @@ namespace TodoApi.Models
         public string Role { get; set; }
         public string School { get; set; }
         public bool Access { get; set; }
+        public bool Status { get; set; }
+        public List<Setting> Examsetting { get; set; }
     }
 }

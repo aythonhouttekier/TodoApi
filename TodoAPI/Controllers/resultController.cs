@@ -66,11 +66,13 @@ namespace TodoApi.Controllers
             _context.ResultItems.Add(item);
             await _context.SaveChangesAsync();
 
-            for (int i = 0; i < results.Count; i++)
+            var alles = await _context.ResultItems.ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
             {
-                results[i].FileBytes = null;
+                alles[i].FileBytes = null;
             }
-            await _hub.Clients.All.SendAsync("results", results);
+            await _hub.Clients.All.SendAsync("results", alles);
             return CreatedAtAction(nameof(GetResultItem), new { id = item.Id }, item);
         }
 
@@ -102,6 +104,11 @@ namespace TodoApi.Controllers
             return NoContent();
         }
 
+
+
+
+
+
         // DELETE: api/Todo/5
         [HttpDelete("bytes/{id}"), Authorize]
         public async Task<IActionResult> DeleteResultNBItem(long id)
@@ -124,6 +131,106 @@ namespace TodoApi.Controllers
             await _hub.Clients.All.SendAsync("results", alles);
             return NoContent();
         }
+
+        // DELETE: bytes/deleteall
+        [HttpDelete("deleteall"), Authorize]
+        public async Task<IActionResult> DeleteAllResults()
+        {
+            var alles = await _context.ResultItems.ToListAsync();
+            
+            for (int i = 0; i < alles.Count; i++)
+            {
+                var todoItem = await _context.ResultItems.FindAsync(alles[i].Id);
+                if (todoItem == null)
+                {
+                    return NotFound();
+                }
+                _context.ResultItems.Remove(todoItem);
+            }
+            
+            await _context.SaveChangesAsync();
+            var tout = await _context.ResultItems.ToListAsync();
+
+            await _hub.Clients.All.SendAsync("results", tout);
+            return NoContent();
+        }
+        [HttpDelete("deleteall/school/{school}"), Authorize]
+        public async Task<IActionResult> DeleteSchoolResults(string school)
+        {
+            var alles = await _context.ResultItems.ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
+            {
+                if (alles[i].School == school)
+                {
+                    var todoItem = await _context.ResultItems.FindAsync(alles[i].Id);
+                    if (todoItem == null)
+                    {
+                        return NotFound();
+                    }
+                    _context.ResultItems.Remove(todoItem);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            var tout = await _context.ResultItems.ToListAsync();
+
+            await _hub.Clients.All.SendAsync("results", tout);
+            return NoContent();
+        }
+
+        [HttpDelete("delete/username/{username}"), Authorize]
+        public async Task<IActionResult> DeleteUsernameResults(string username)
+        {
+            var alles = await _context.ResultItems.ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
+            {
+                if (alles[i].Username == username)
+                {
+                    var todoItem = await _context.ResultItems.FindAsync(alles[i].Id);
+                    if (todoItem == null)
+                    {
+                        return NotFound();
+                    }
+                    _context.ResultItems.Remove(todoItem);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            var tout = await _context.ResultItems.ToListAsync();
+
+            await _hub.Clients.All.SendAsync("results", tout);
+            return NoContent();
+        }
+
+        [HttpDelete("delete/school/{school}/filename/{filename}"), Authorize]
+        public async Task<IActionResult> DeleteFilenameResults(string school, string filename)
+        {
+            var alles = await _context.ResultItems.ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
+            {
+                if (alles[i].FileName == filename && alles[i].School == school)
+                {
+                    var todoItem = await _context.ResultItems.FindAsync(alles[i].Id);
+                    if (todoItem == null)
+                    {
+                        return NotFound();
+                    }
+                    _context.ResultItems.Remove(todoItem);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            var tout = await _context.ResultItems.ToListAsync();
+
+            await _hub.Clients.All.SendAsync("results", tout);
+            return NoContent();
+        }
+
+
+
 
 
 
