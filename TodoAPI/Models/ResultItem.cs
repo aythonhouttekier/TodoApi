@@ -10,6 +10,8 @@ namespace TodoApi.Models
         public long Id { get; set; }
         public string Username { get; set; }
         public string School { get; set; }
+        public string Opleiding { get; set; }
+        public string Vak { get; set; }
         public string FileName { get; set; }
         public byte[] FileBytes { get; set; }
     }

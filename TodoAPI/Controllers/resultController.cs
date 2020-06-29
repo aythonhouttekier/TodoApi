@@ -24,6 +24,66 @@ namespace TodoApi.Controllers
         {
             _hub = hub;
             _context = context;
+
+            //    public long Id { get; set; }
+            //public string Username { get; set; }
+            //public string School { get; set; }
+            //public string Opleiding { get; set; }
+            //public string Vak { get; set; }
+            //public string FileName { get; set; }
+            //public byte[] FileBytes { get; set; }
+            //if (_context.ResultItems.Count() == 0)
+            //{
+            //    // Create a new TodoItem if collection is empty,
+            //    // which means you can't delete all Items.
+            //    _context.ResultItems.Add(new ResultItem
+            //    {
+            //        Username = "Student1",
+            //        School = "Vives",
+            //        Opleiding = "Elektronica-ICT1",
+            //        Vak = "Programmeren1",
+            //        FileName = "examenProgrammeren1",
+            //        FileBytes = null
+            //    });
+            //    _context.ResultItems.Add(new ResultItem
+            //    {
+            //        Username = "Student4",
+            //        School = "Vives",
+            //        Opleiding = "Elektronica-ICT1",
+            //        Vak = "Programmeren1",
+            //        FileName = "examenProgrammeren1",
+            //        FileBytes = null
+            //    });
+            //    _context.ResultItems.Add(new ResultItem
+            //    {
+            //        Username = "Student3",
+            //        School = "Vives",
+            //        Opleiding = "Elektronica-ICT1",
+            //        Vak = "Programmeren1",
+            //        FileName = "examenProgrammeren1",
+            //        FileBytes = null
+            //    });
+            //    _context.ResultItems.Add(new ResultItem
+            //    {
+            //        Username = "Student5",
+            //        School = "Vives",
+            //        Opleiding = "Luchtvaart1",
+            //        Vak = "Onderhoud",
+            //        FileName = "examenOnderhoud1",
+            //        FileBytes = null
+            //    });
+            //    _context.ResultItems.Add(new ResultItem
+            //    {
+            //        Username = "Student5",
+            //        School = "VUB",
+            //        Opleiding = "Rechten1",
+            //        Vak = "Recht",
+            //        FileName = "examenRecht1",
+            //        FileBytes = null
+            //    });
+
+            //    _context.SaveChanges();
+            //}
         }
 
         [HttpGet("bytes"), Authorize]
@@ -89,6 +149,8 @@ namespace TodoApi.Controllers
             fileItem.FileBytes = fileItem.FileBytes;
             fileItem.FileName = item.FileName;
             fileItem.School = item.School;
+            fileItem.Opleiding = item.Opleiding;
+            fileItem.Vak = item.Vak;
             fileItem.Username = item.Username;
 
             //_context.Entry(item).State = EntityState.Modified;
@@ -104,6 +166,23 @@ namespace TodoApi.Controllers
             return NoContent();
         }
 
+
+        [HttpPut("bytes/naam/{filenaam}/school/{school}/opleiding/{opleiding}/nieuwenaam/{nieuwenaam}"), Authorize]
+        public async Task<IActionResult> PutNieuweNaammmResultNBItem(string filenaam, string school, string opleiding, string nieuwenaam)
+        {
+            var alles = await _context.ResultItems.ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
+            {
+                if (alles[i].School == school && alles[i].Opleiding == opleiding && alles[i].FileName == filenaam)
+                {
+                    alles[i].FileName = nieuwenaam;
+                }
+            }
+            await _context.SaveChangesAsync();
+            await _hub.Clients.All.SendAsync("results", alles);
+            return NoContent();
+        }
 
 
 
@@ -141,10 +220,6 @@ namespace TodoApi.Controllers
             for (int i = 0; i < alles.Count; i++)
             {
                 var todoItem = await _context.ResultItems.FindAsync(alles[i].Id);
-                if (todoItem == null)
-                {
-                    return NotFound();
-                }
                 _context.ResultItems.Remove(todoItem);
             }
             
@@ -164,10 +239,47 @@ namespace TodoApi.Controllers
                 if (alles[i].School == school)
                 {
                     var todoItem = await _context.ResultItems.FindAsync(alles[i].Id);
-                    if (todoItem == null)
-                    {
-                        return NotFound();
-                    }
+                    _context.ResultItems.Remove(todoItem);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            var tout = await _context.ResultItems.ToListAsync();
+
+            await _hub.Clients.All.SendAsync("results", tout);
+            return NoContent();
+        }
+        [HttpDelete("deleteall/opleiding/{opleiding}"), Authorize]
+        public async Task<IActionResult> DeleteAllOpleidingResults(string opleiding)
+        {
+            var alles = await _context.ResultItems.ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
+            {
+                if (alles[i].Opleiding == opleiding)
+                {
+                    var todoItem = await _context.ResultItems.FindAsync(alles[i].Id);
+                    _context.ResultItems.Remove(todoItem);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            var tout = await _context.ResultItems.ToListAsync();
+
+            await _hub.Clients.All.SendAsync("results", tout);
+            return NoContent();
+        }
+
+        [HttpDelete("deleteall/opleiding/{opleiding}/vak/{vak}"), Authorize]
+        public async Task<IActionResult> DeleteOpleidingResults(string opleiding, string vak)
+        {
+            var alles = await _context.ResultItems.ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
+            {
+                if (alles[i].Opleiding == opleiding && alles[i].Vak == vak)
+                {
+                    var todoItem = await _context.ResultItems.FindAsync(alles[i].Id);
                     _context.ResultItems.Remove(todoItem);
                 }
             }
@@ -204,14 +316,14 @@ namespace TodoApi.Controllers
             return NoContent();
         }
 
-        [HttpDelete("delete/school/{school}/filename/{filename}"), Authorize]
-        public async Task<IActionResult> DeleteFilenameResults(string school, string filename)
+        [HttpDelete("delete/opleiding/{opleiding}/filename/{filename}"), Authorize]
+        public async Task<IActionResult> DeleteFilenameResults(string opleiding, string filename)
         {
             var alles = await _context.ResultItems.ToListAsync();
 
             for (int i = 0; i < alles.Count; i++)
             {
-                if (alles[i].FileName == filename && alles[i].School == school)
+                if (alles[i].FileName == filename && alles[i].Opleiding == opleiding)
                 {
                     var todoItem = await _context.ResultItems.FindAsync(alles[i].Id);
                     if (todoItem == null)
@@ -255,6 +367,43 @@ namespace TodoApi.Controllers
 
             return todoItem;
         }
+
+
+        // GET: api/Todo/5
+        [HttpGet("geeet/{filename}/{username}"), Authorize]
+        public async Task<ActionResult<ResultItem>> GetFilenameResultItem(string filename, string username)
+        {
+            var alles = await _context.ResultItems.ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
+            {
+                if (alles[i].FileName == filename && alles[i].Username == username)
+                {
+                    var todoItem = alles[i];
+                    return todoItem;
+                }
+            }
+            return Ok("Geen result");
+        }
+
+
+        // GET: api/Todo/5
+        [HttpGet("getresults/{username}"), Authorize]
+        public async Task<ActionResult<List<ResultItem>>> GetUsernaamResultItem(string username)
+        {
+            var alles = await _context.ResultItems.ToListAsync();
+            var a = new List<ResultItem> { };
+            for (int i = 0; i < alles.Count; i++)
+            {
+                if (alles[i].Username == username)
+                {
+                    var todoItem = alles[i];
+                    a.Add(todoItem);
+                }
+            }
+            return a;
+        }
+
 
         // POST: api/Todo
         [HttpPost, Authorize]

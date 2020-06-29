@@ -23,6 +23,114 @@ namespace TodoApi.Controllers
         {
             _hub = hub;
             _context = context;
+            //if (_context.TodoItems.Count() == 0)
+            //{
+            //    // Create a new TodoItem if collection is empty,
+            //    // which means you can't delete all Items.
+            //    _context.TodoItems.Add(new FileItem
+            //    {
+            //        School = "Vives",
+            //        Opleiding = "Elektronica-ICT1",
+            //        Vak = "Programmeren1",
+            //        FileName = "examenProgrammeren1",
+            //        FileUrl = "",
+            //        FileBytes = null,
+            //        Exam = false,
+            //        Spelling = true,
+            //        Woord = false,
+            //        Woordenboek = true,
+            //        Vertalen = true,
+            //        Drive = true,
+            //        Online = true,
+            //        Visibility = true
+            //    });
+            //    _context.TodoItems.Add(new FileItem
+            //    {
+            //        School = "Vives",
+            //        Opleiding = "Elektronica-ICT1",
+            //        Vak = "Webtechnologie",
+            //        FileName = "examenWEBT",
+            //        FileUrl = "",
+            //        FileBytes = null,
+            //        Exam = false,
+            //        Spelling = true,
+            //        Woord = false,
+            //        Woordenboek = false,
+            //        Vertalen = true,
+            //        Drive = true,
+            //        Online = true,
+            //        Visibility = true
+            //    });
+            //    _context.TodoItems.Add(new FileItem
+            //    {
+            //        School = "Vives",
+            //        Opleiding = "Luchtvaart1",
+            //        Vak = "Onderhoud",
+            //        FileName = "examenOnderhoud1",
+            //        FileUrl = "",
+            //        FileBytes = null,
+            //        Exam = false,
+            //        Spelling = true,
+            //        Woord = false,
+            //        Woordenboek = true,
+            //        Vertalen = false,
+            //        Drive = true,
+            //        Online = true,
+            //        Visibility = true
+            //    });
+            //    _context.TodoItems.Add(new FileItem
+            //    {
+            //        School = "VUB",
+            //        Opleiding = "Rechten1",
+            //        Vak = "Recht",
+            //        FileName = "examenRecht1",
+            //        FileUrl = "",
+            //        FileBytes = null,
+            //        Exam = false,
+            //        Spelling = true,
+            //        Woord = false,
+            //        Woordenboek = true,
+            //        Vertalen = true,
+            //        Drive = true,
+            //        Online = true,
+            //        Visibility = true
+            //    });
+            //    _context.TodoItems.Add(new FileItem
+            //    {
+            //        School = "KU Leuven",
+            //        Opleiding = "Architectuur1",
+            //        Vak = "Wiskunde1",
+            //        FileName = "examenWiskunde1",
+            //        FileUrl = "",
+            //        FileBytes = null,
+            //        Exam = false,
+            //        Spelling = true,
+            //        Woord = false,
+            //        Woordenboek = true,
+            //        Vertalen = true,
+            //        Drive = true,
+            //        Online = true,
+            //        Visibility = true
+            //    });
+            //    _context.TodoItems.Add(new FileItem
+            //    {
+            //        School = "KU Leuven",
+            //        Opleiding = "Architectuur1",
+            //        Vak = "Architectuur1",
+            //        FileName = "examenArchitectuur1",
+            //        FileUrl = "",
+            //        FileBytes = null,
+            //        Exam = false,
+            //        Spelling = true,
+            //        Woord = false,
+            //        Woordenboek = true,
+            //        Vertalen = true,
+            //        Drive = true,
+            //        Online = true,
+            //        Visibility = true
+            //    });
+            //    _context.SaveChanges();
+            //}
         }
 
         [HttpGet("bytes"), Authorize]
@@ -38,15 +146,35 @@ namespace TodoApi.Controllers
             return alles;
         }
 
-        [HttpGet("bytes/filename/{filename}"), Authorize]
-        public async Task<ActionResult<FileItem>> GetfileTodoItem(string filename)
+        [HttpGet("bytes/filename/{filename}/school/{school}"), Authorize]
+        public async Task<ActionResult<FileItem>> GetfileTodoItem(string filename, string school)
         {
             var alles = await _context.TodoItems.ToListAsync();
 
             for (int i = 0; i < alles.Count; i++)
             {
                 alles[i].FileBytes = null;
-                if (alles[i].FileName == filename)
+                if (alles[i].FileName == filename && alles[i].School == school)
+                {
+                    var todoItem = alles[i];
+                    if (todoItem == null)
+                    {
+                        return NotFound();
+                    }
+                    return todoItem;
+                }
+            }
+            return NotFound();
+        }
+        [HttpGet("bytes/filename/{filename}/opleiding/{opleiding}"), Authorize]
+        public async Task<ActionResult<FileItem>> GetoplfileTodoItem(string filename, string opleiding)
+        {
+            var alles = await _context.TodoItems.ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
+            {
+                alles[i].FileBytes = null;
+                if (alles[i].FileName == filename && alles[i].Opleiding == opleiding)
                 {
                     var todoItem = alles[i];
                     if (todoItem == null)
@@ -78,9 +206,13 @@ namespace TodoApi.Controllers
             var results = await _context.TodoItems.ToListAsync();
             for (int i = 0; i < results.Count; i++)
             {
-                if (results[i].FileName == item.FileName && results[i].School == item.School)
+                if (results[i].FileName == item.FileName && results[i].Opleiding == item.Opleiding)
                 {
                     return BadRequest();
+                }
+                if (item.Visibility == true && results[i].Opleiding == item.Opleiding)
+                {
+                    results[i].Visibility = false;
                 }
             }
             _context.TodoItems.Add(item);
@@ -105,11 +237,27 @@ namespace TodoApi.Controllers
                 return BadRequest();
             }
             var fileItem = await _context.TodoItems.FindAsync(id);
+
+            var results = await _context.TodoItems.ToListAsync();
+            for (int i = 0; i < results.Count; i++)
+            {
+                if (results[i].FileName == item.FileName && results[i].Opleiding == item.Opleiding && fileItem.FileName != item.FileName)
+                {
+                    return BadRequest();
+                }
+                if (item.Visibility == true && results[i].Opleiding == item.Opleiding)
+                {
+                    results[i].Visibility = false;
+                }
+            }
+
             fileItem.Id = fileItem.Id;
             fileItem.FileBytes = fileItem.FileBytes;
             fileItem.FileName = item.FileName;
             fileItem.FileUrl = item.FileUrl;
             fileItem.School = item.School;
+            fileItem.Opleiding = item.Opleiding;
+            fileItem.Vak = item.Vak;
             fileItem.Visibility = item.Visibility;
             fileItem.Exam = item.Exam;
             fileItem.Spelling = item.Spelling;
@@ -194,6 +342,27 @@ namespace TodoApi.Controllers
             return NoContent();
         }
 
+        [HttpDelete("deleteall/opleiding/{opleiding}/vak/{vak}"), Authorize]
+        public async Task<IActionResult> DeleteOpleidingResults(string opleiding, string vak)
+        {
+            var alles = await _context.TodoItems.ToListAsync();
+
+            for (int i = 0; i < alles.Count; i++)
+            {
+                if (alles[i].Opleiding == opleiding && alles[i].Vak == vak)
+                {
+                    var todoItem = await _context.TodoItems.FindAsync(alles[i].Id);
+                    _context.TodoItems.Remove(todoItem);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            var tout = await _context.TodoItems.ToListAsync();
+
+            await _hub.Clients.All.SendAsync("Files", tout);
+            return NoContent();
+        }
+
 
 
 
@@ -230,7 +399,7 @@ namespace TodoApi.Controllers
             var results = await _context.TodoItems.ToListAsync();
             for (int i = 0; i < results.Count; i++)
             {
-                if (results[i].FileName == item.FileName && results[i].School == item.School)
+                if (results[i].FileName == item.FileName && results[i].Opleiding == item.Opleiding)
                 {
                     return BadRequest();
                 }
